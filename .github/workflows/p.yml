@@ -1,21 +1,13 @@
 name: Twitch 自动注册
 
 on:
-  # 手动触发（可指定总数量、并行 Job 数、并发线程数与前端 IP）
+  # 手动触发（只需要设置Job数量和前端IP，每个Job固定注册20个账号）
   workflow_dispatch:
     inputs:
-      register_count:
-        description: "注册账号总数量"
-        required: false
-        default: "10"
       jobs:
-        description: "并行 GitHub Job 数（多个 runner 同时跑，加快速度）"
+        description: "并行 GitHub Job 数（多个 runner 同时跑，每个Job注册20个账号）"
         required: false
         default: "1"
-      threads:
-        description: "每个 Job 内并发线程数（同时跑几个浏览器）"
-        required: false
-        default: "3"
       front_ip:
         description: "前端管理系统 IP（如 8.138.198.37）"
         required: false
@@ -31,14 +23,14 @@ jobs:
       - name: 生成并行 matrix
         id: gen
         run: |
-          total="${{ github.event.inputs.register_count || '10' }}"
           njobs="${{ github.event.inputs.jobs || '1' }}"
+          # 每个Job固定注册20个账号
+          PER_JOB=20
           python3 -c "
-          import json, math
-          t = max(1, int('$total'))
+          import json
           j = max(1, int('$njobs'))
           print('matrix=' + json.dumps(list(range(j))))
-          print('per_job=' + str(math.ceil(t / j)))
+          print('per_job=' + str($PER_JOB))
           " >> "$GITHUB_OUTPUT"
 
   register:
@@ -76,10 +68,10 @@ jobs:
 
       - name: 运行注册 (Job ${{ matrix.job_index }})
         env:
-          # 每个 Job 注册 ceil(总数 / 并行数) 个，N 个 Job 并行合计约等于总数
+          # 每个 Job 固定注册20个账号
           REGISTER_COUNT: ${{ needs.prepare.outputs.per_job }}
-          # 每个 Job 内并发线程数
-          REG_THREADS: ${{ github.event.inputs.threads || '3' }}
+          # 每个 Job 内并发线程数固定为3
+          REG_THREADS: "3"
           FRONT_IP: ${{ github.event.inputs.front_ip || '8.138.198.37' }}
           UPLOAD_TO_API: "true"
           API_TOKEN: ${{ secrets.API_TOKEN }}
