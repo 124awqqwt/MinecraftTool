@@ -80,10 +80,8 @@ env:
   PYTHONIOENCODING: utf-8
   LOGURU_LEVEL: ${{ github.event.inputs.log_level || 'INFO' }}
   # --- 下面这些按需覆盖即可，默认值见 config_helpers.py ---
-  # 出口恢复链（从第一级开始逐级降级，全用尽才放弃）：
-  #   VPNGate 节点轮换 → WARP 重置 → 本机直连 → 终止
-  # Clash 订阅节点：设了就作为第一级出口（GA 里自动下载 mihomo 内核 + 浏览器走本地代理）。
-  # 订阅地址放 secret（公开仓库里不会明文出现），也可用 inputs.clash_sub_url 临时覆盖。
+  # 出口恢复链（从第一级逐级降级）：VPNGate 节点轮换 → WARP 重置 → 本机直连 → 终止
+  # Clash 订阅节点只在对照测试时启用（clash_mode=true 或指定 clash_pin_node）
   CLASH_ENABLED: ${{ inputs.clash_mode }}
   CLASH_SUB_URL: ${{ inputs.clash_sub_url != '' && inputs.clash_sub_url || secrets.CLASH_SUB_URL }}
   CLASH_FAIL_THRESHOLD: "3"
